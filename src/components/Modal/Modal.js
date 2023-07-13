@@ -9,7 +9,9 @@ export class Modal extends Component {
     }
   };
   overlayClose = e => {
-    this.props.onCloseModal();
+    if (e.target === e.currentTarget) {
+      this.props.onCloseModal();
+    }
   };
 
   componentDidMount = () => {

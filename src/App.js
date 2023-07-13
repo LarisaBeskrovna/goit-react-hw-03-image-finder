@@ -19,8 +19,31 @@ export class App extends Component {
     selectedImage: '',
   };
 
+  async componentDidUpdate(prevProps, prevState) {
+    const { query, page } = this.state;
+    if (prevState.query !== query || prevState.page !== page) {
+      this.setState({ isLoading: true });
+      try {
+        const images = await fetchImages(query, page);
+        if (images.hits.length === 0) {
+          alert('Nothing found!');
+        }
+
+        this.setState({
+          images: [...prevState.images, ...images.hits],
+          totalHits: images.totalHits,
+        });
+      } catch (error) {
+        this.setState({ error });
+        alert('error: ' + this.state.error);
+      } finally {
+        this.setState({ isLoading: false });
+      }
+    }
+  }
+
   formSubmit = searchQuery => {
-    this.setState({ query: searchQuery, page: 1 });
+    this.setState({ query: searchQuery, page: 1, images: [] });
   };
   loadMore = e => {
     e.preventDefault();
@@ -30,10 +53,6 @@ export class App extends Component {
     }));
   };
 
-  clickImage = e => {
-    e.preventDefault();
-    console.log(e.target.src);
-  };
   onOpenModal = imageURL => {
     this.setState({ isModal: true, selectedImage: imageURL });
   };
@@ -41,35 +60,6 @@ export class App extends Component {
   onCloseModal = () => {
     this.setState({ isModal: false, selectedImage: '' });
   };
-
-  async componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
-      this.setState({ isLoading: true });
-      try {
-        const images = await fetchImages(this.state.query, this.state.page);
-        if (images.hits.length === 0) {
-          alert('Nothing found!');
-        }
-
-        if (prevState.query === this.state.query) {
-          this.setState({
-            images: [...prevState.images, ...images.hits],
-            totalHits: images.totalHits,
-          });
-        } else {
-          this.setState({ images: images.hits, totalHits: images.totalHits });
-        }
-      } catch (error) {
-        this.setState({ error });
-        alert('error: ' + this.state.error);
-      } finally {
-        this.setState({ isLoading: false });
-      }
-    }
-  }
 
   render() {
     return (
